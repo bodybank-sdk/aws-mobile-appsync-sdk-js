@@ -6,23 +6,27 @@
  * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY 
  * KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-import { ApolloError } from 'apollo-client';
-import { Observable, Operation } from 'apollo-link';
-import { ApolloLink } from 'apollo-link';
-import { getOperationDefinition } from "apollo-utilities";
-import { ExecutionResult, GraphQLError } from 'graphql';
+import {ApolloError} from 'apollo-client';
+import {Observable, Operation} from 'apollo-link';
+import {ApolloLink} from 'apollo-link';
+import {getOperationDefinition} from "apollo-utilities";
+import {ExecutionResult, GraphQLError} from 'graphql';
 
 import upload from "./complex-object-link-uploader";
-import { AWSAppsyncGraphQLError } from '../types';
+import {AWSAppsyncGraphQLError} from '../types';
+
+export interface ComplexObjectSSEConfig {
+    kmsKeyId?: string
+}
 
 export class ComplexObjectLink extends ApolloLink {
 
     private link: ApolloLink;
 
-    constructor(credentials) {
+    constructor(credentials, config) {
         super();
 
-        this.link = complexObjectLink(credentials);
+        this.link = complexObjectLink(credentials, config);
     }
 
     request(operation, forward) {
@@ -30,12 +34,12 @@ export class ComplexObjectLink extends ApolloLink {
     }
 }
 
-export const complexObjectLink = (credentials) => {
+export const complexObjectLink = (credentials, config) => {
     return new ApolloLink((operation, forward) => {
         return new Observable(observer => {
             let handle;
 
-            const { operation: operationType } = getOperationDefinition(operation.query);
+            const {operation: operationType} = getOperationDefinition(operation.query);
             const isMutation = operationType === 'mutation';
             const objectsToUpload = isMutation ? findInObject(operation.variables) : {};
 
@@ -46,7 +50,7 @@ export const complexObjectLink = (credentials) => {
 
                 uploadPromise = Promise.resolve(uploadCredentials)
                     .then(credentials => {
-                        const uploadPromises = Object.entries(objectsToUpload).map(([_, fileField]) => upload(fileField, { credentials }));
+                        const uploadPromises = Object.entries(objectsToUpload).map(([_, fileField]) => upload(fileField, {credentials, config}));
 
                         return Promise.all([operation, ...uploadPromises] as Promise<any>[]);
                     })
@@ -71,8 +75,8 @@ export const complexObjectLink = (credentials) => {
                         complete: observer.complete.bind(observer),
                     });
                 }).catch(err => {
-                    observer.error(err);
-                });
+                observer.error(err);
+            });
 
             return () => {
                 if (handle) handle.unsubscribe();
@@ -82,11 +86,11 @@ export const complexObjectLink = (credentials) => {
 }
 
 const complexObjectFields = [
-    { name: 'bucket', type: 'string' },
-    { name: 'key', type: 'string' },
-    { name: 'region', type: 'string' },
-    { name: 'mimeType', type: 'string' },
-    { name: 'localUri', type: ['object', 'string'] },
+    {name: 'bucket', type: 'string'},
+    {name: 'key', type: 'string'},
+    {name: 'region', type: 'string'},
+    {name: 'mimeType', type: 'string'},
+    {name: 'localUri', type: ['object', 'string']},
 ];
 const findInObject = obj => {
     const testFn = val => {
@@ -107,7 +111,7 @@ const findInObject = obj => {
         }
 
         if (testFn(obj)) {
-            acc[path] = { ...obj };
+            acc[path] = {...obj};
             delete obj.mimeType;
             delete obj.localUri;
         }
