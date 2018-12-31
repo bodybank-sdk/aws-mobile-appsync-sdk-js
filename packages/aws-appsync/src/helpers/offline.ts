@@ -94,11 +94,11 @@ export type CacheUpdatesOptions = (variables?: object) => CacheUpdatesDefinition
 /**
  * Builds a SubscribeToMoreOptions object ready to be used by Apollo's subscribeToMore() to automatically update the query result in the
  * cache according to the cacheUpdateQuery parameter
- * 
+ *
  * @param subscriptionQuery The GraphQL subscription DocumentNode or CacheUpdateQuery
  * @param cacheUpdateQuery The query for which the result needs to be updated
- * @param idField 
- * @param operationType 
+ * @param idField
+ * @param operationType
  */
 const buildSubscription = (
     subscriptionQuery: CacheUpdateQuery,
@@ -248,9 +248,9 @@ export type VariablesInfo<T = OperationVariables> = {
 };
 
 /**
- * Builds a MutationOptions object ready to be used by the ApolloClient to automatically update the cache according to the cacheUpdateQuery 
+ * Builds a MutationOptions object ready to be used by the ApolloClient to automatically update the cache according to the cacheUpdateQuery
  * parameter
- * 
+ *
  * @param client An ApolloClient instance
  * @param mutation DocumentNode for the muation
  * @param variables An object with the mutation variables
@@ -258,7 +258,7 @@ export type VariablesInfo<T = OperationVariables> = {
  * @param typename __typename from your schema
  * @param idField The name of the field with the ID
  * @param operationType Override for the operation type
- * 
+ *
  * @returns Mutation options to be used by the ApolloClient
  */
 const buildMutation = <T = OperationVariables>(
@@ -298,7 +298,7 @@ const buildMutation = <T = OperationVariables>(
 
             let result;
             try {
-                const { [queryField]: queryRead } = client.readQuery({ query, variables: queryVars });
+                const { [queryField]: queryRead } = client.readQuery<{[key:string]: any}>({ query, variables: queryVars });
 
                 result = queryRead;
             } catch (err) {

@@ -15,14 +15,18 @@ import { ExecutionResult, GraphQLError } from 'graphql';
 import upload from "./complex-object-link-uploader";
 import { AWSAppsyncGraphQLError } from '../types';
 
+export interface ComplexObjectSSEConfig {
+    kmsKeyId?: string
+}
+
 export class ComplexObjectLink extends ApolloLink {
 
     private link: ApolloLink;
 
-    constructor(credentials) {
+    constructor(credentials, sseConfig) {
         super();
 
-        this.link = complexObjectLink(credentials);
+        this.link = complexObjectLink(credentials, sseConfig);
     }
 
     request(operation, forward) {
@@ -30,7 +34,9 @@ export class ComplexObjectLink extends ApolloLink {
     }
 }
 
-export const complexObjectLink = (credentials) => {
+
+
+export const complexObjectLink = (credentials, sseConfig) => {
     return new ApolloLink((operation, forward) => {
         return new Observable(observer => {
             let handle;
@@ -46,7 +52,7 @@ export const complexObjectLink = (credentials) => {
 
                 uploadPromise = Promise.resolve(uploadCredentials)
                     .then(credentials => {
-                        const uploadPromises = Object.entries(objectsToUpload).map(([_, fileField]) => upload(fileField, { credentials }));
+                        const uploadPromises = Object.entries(objectsToUpload).map(([_, fileField]) => upload(fileField, { credentials, sseConfig }));
 
                         return Promise.all([operation, ...uploadPromises] as Promise<any>[]);
                     })

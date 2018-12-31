@@ -35,6 +35,8 @@ import { createRetryLink } from './link/retry-link';
 import { boundEnqueueDeltaSync, buildSync, DELTASYNC_KEY, hashForOptions } from "./deltaSync";
 import { Subscription } from 'apollo-client/util/Observable';
 import { CONTROL_EVENTS_KEY } from './link/subscription-handshake-link';
+import {ComplexObjectSSEConfig} from "./link/complex-object-link";
+import {selectSeries} from "async";
 
 export { defaultDataIdFromObject };
 
@@ -77,6 +79,7 @@ export const createAppSyncLink = ({
     complexObjectsCredentials,
     resultsFetcherLink = createHttpLink({ uri: url }),
     conflictResolver,
+    sseConfig
 }: {
         url: string,
         region: string,
@@ -84,11 +87,12 @@ export const createAppSyncLink = ({
         complexObjectsCredentials: CredentialsGetter,
         resultsFetcherLink?: ApolloLink,
         conflictResolver?: ConflictResolver,
+    sseConfig?: ComplexObjectSSEConfig,
     }) => {
     const link = ApolloLink.from([
         createLinkWithStore((store) => new OfflineLink(store)),
         new ConflictResolutionLink(conflictResolver),
-        new ComplexObjectLink(complexObjectsCredentials),
+        new ComplexObjectLink(complexObjectsCredentials, sseConfig),
         createRetryLink(ApolloLink.from([
             createAuthLink({ url, region, auth }),
             createSubscriptionHandshakeLink(url, resultsFetcherLink)
@@ -135,6 +139,7 @@ export interface AWSAppSyncClientOptions {
     cacheOptions?: ApolloReducerConfig,
     disableOffline?: boolean,
     offlineConfig?: OfflineConfig,
+    sseConfig?: ComplexObjectSSEConfig,
 }
 
 export interface OfflineConfig {
@@ -181,6 +186,7 @@ class AWSAppSyncClient<TCacheShape extends NormalizedCacheObject> extends Apollo
             callback = () => { },
             storeCacheRootMutation = false,
         } = {},
+        sseConfig = {}
     }: AWSAppSyncClientOptions, options?: Partial<ApolloClientOptions<TCacheShape>>) {
         const { cache: customCache = undefined, link: customLink = undefined } = options || {};
 
@@ -218,7 +224,7 @@ class AWSAppSyncClient<TCacheShape extends NormalizedCacheObject> extends Apollo
                 };
             });
         });
-        const link = waitForRehydrationLink.concat(customLink || createAppSyncLink({ url, region, auth, complexObjectsCredentials, conflictResolver }));
+        const link = waitForRehydrationLink.concat(customLink || createAppSyncLink({ url, region, auth, complexObjectsCredentials, conflictResolver , sseConfig}));
 
         const newOptions = {
             ...options,
