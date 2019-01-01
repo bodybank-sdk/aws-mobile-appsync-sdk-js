@@ -9,7 +9,7 @@
 import * as S3 from 'aws-sdk/clients/s3';
 
 export default (fileField, {credentials, sseConfig}) => {
-    const {
+    let {
         bucket: Bucket,
         key: Key,
         region,
@@ -27,7 +27,9 @@ export default (fileField, {credentials, sseConfig}) => {
         Key,
         Body,
         ContentType,
+        ContentEncoding: 'base64'
     };
+
     if (sseConfig != null) {
         if (sseConfig.kmsKeyId != null) {
             params.SSEKMSKeyId = sseConfig.kmsKeyId;
