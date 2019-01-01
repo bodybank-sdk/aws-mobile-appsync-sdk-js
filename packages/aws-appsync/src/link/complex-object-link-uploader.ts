@@ -30,7 +30,8 @@ export default (fileField, {credentials, sseConfig}) => {
     };
     if (sseConfig != null) {
         if (sseConfig.kmsKeyId != null) {
-            params.SSEKMSKeyId = sseConfig.kmsKeyId
+            params.SSEKMSKeyId = sseConfig.kmsKeyId;
+            params.ServerSideEncryption = "aws:kms"
         }
     }
     return s3.upload(params).promise();
