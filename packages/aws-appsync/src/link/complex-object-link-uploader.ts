@@ -8,7 +8,7 @@
  */
 import * as S3 from 'aws-sdk/clients/s3';
 
-export default (fileField, {credentials, sseConfig}) => {
+export default (fileField, {credentials, s3Config}) => {
     let {
         bucket: Bucket,
         key: Key,
@@ -22,19 +22,23 @@ export default (fileField, {credentials, sseConfig}) => {
         region,
     });
 
-    let params: S3.PutObjectRequest = {
-        Bucket,
-        Key,
-        Body,
-        ContentType,
-        ContentEncoding: 'base64'
-    };
+    let params: S3.PutObjectRequest;
 
-    if (sseConfig != null) {
-        if (sseConfig.kmsKeyId != null) {
-            params.SSEKMSKeyId = sseConfig.kmsKeyId;
-            params.ServerSideEncryption = "aws:kms"
-        }
+    if(s3Config.generatePutObjectRequest != null){
+       params = s3Config.generatePutObjectRequest(
+           Bucket,
+           Key,
+           Body,
+           ContentType
+       );
+    }else {
+        params = {
+            Bucket,
+            Key,
+            Body,
+            ContentType,
+        };
     }
+
     return s3.upload(params).promise();
 };
