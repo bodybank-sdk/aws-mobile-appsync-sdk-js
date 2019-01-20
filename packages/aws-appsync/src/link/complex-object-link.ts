@@ -17,7 +17,7 @@ import { AWSAppsyncGraphQLError } from '../types';
 import {S3} from "aws-sdk";
 
 export interface S3Config{
-    generatePutObjectRequest?: null | ((Bucket: string, Key: string, Body: any, ContentType: string) => S3.PutObjectRequest)
+    modifyPutObjectRequest?: null | ((request: S3.PutObjectRequest) => S3.PutObjectRequest)
 }
 
 export class ComplexObjectLink extends ApolloLink {

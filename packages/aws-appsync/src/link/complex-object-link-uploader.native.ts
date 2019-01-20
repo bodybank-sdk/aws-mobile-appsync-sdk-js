@@ -22,22 +22,15 @@ export default (fileField, { credentials, s3Config }) => {
         region,
     });
 
-    let params: S3.PutObjectRequest;
+    let params: S3.PutObjectRequest = {
+        Bucket,
+        Key,
+        Body,
+        ContentType,
+    };
 
-    if(s3Config.generatePutObjectRequest != null){
-        params = s3Config.generatePutObjectRequest(
-            Bucket,
-            Key,
-            Body,
-            ContentType
-        );
-    }else {
-        params = {
-            Bucket,
-            Key,
-            Body,
-            ContentType,
-        };
+    if(s3Config.modifyPutObjectRequest != null){
+        params = s3Config.modifyPutObjectRequest(params);
     }
 
     return s3.upload(params).promise();
