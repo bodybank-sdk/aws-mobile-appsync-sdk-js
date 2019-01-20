@@ -24,10 +24,10 @@ export class ComplexObjectLink extends ApolloLink {
 
     private link: ApolloLink;
 
-    constructor(credentials, sseConfig) {
+    constructor(credentials, s3Config = null) {
         super();
 
-        this.link = complexObjectLink(credentials, sseConfig);
+        this.link = complexObjectLink(credentials, s3Config);
     }
 
     request(operation, forward) {
@@ -37,7 +37,7 @@ export class ComplexObjectLink extends ApolloLink {
 
 
 
-export const complexObjectLink = (credentials, s3Config) => {
+export const complexObjectLink = (credentials, s3Config = null) => {
     return new ApolloLink((operation, forward) => {
         return new Observable(observer => {
             let handle;
