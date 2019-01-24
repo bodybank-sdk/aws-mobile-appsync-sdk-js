@@ -8,7 +8,7 @@
  */
 import * as S3 from 'aws-sdk/clients/s3';
 
-export default (fileField, {credentials, config}) => {
+export default (fileField, { credentials, s3Config }) => {
     const {
         bucket: Bucket,
         key: Key,
@@ -29,10 +29,9 @@ export default (fileField, {credentials, config}) => {
         ContentType,
     };
 
-    if (config != null) {
-        if (config.kmsKeyId != null) {
-            params.SSEKMSKeyId = config.kmsKeyId;
-        }
+    if (s3Config.modifyPutObjectRequest != null) {
+        params = s3Config.modifyPutObjectRequest(params);
     }
+
     return s3.upload(params).promise();
 };
